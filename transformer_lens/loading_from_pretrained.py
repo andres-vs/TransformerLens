@@ -178,6 +178,7 @@ OFFICIAL_MODEL_NAMES = [
     "01-ai/Yi-34B",
     "01-ai/Yi-6B-Chat",
     "01-ai/Yi-34B-Chat",
+    "andres-vs/tiny-stories-1M-finetuned-Att-Noneg-depth0",
 ]
 """Official model names for models on HuggingFace."""
 
