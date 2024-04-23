@@ -2414,7 +2414,7 @@ def convert_bert_sequence_classification_weights(bert, cfg: HookedTransformerCon
         state_dict[f"blocks.{l}.ln2.w"] = block.output.LayerNorm.weight
         state_dict[f"blocks.{l}.ln2.b"] = block.output.LayerNorm.bias
 
-    cls_head = bert.cls.classifier
+    cls_head = bert.classifier
     state_dict["cls_head.W"] = cls_head.weight
     state_dict["cls_head.b"] = cls_head.bias
 
