@@ -11,7 +11,12 @@ from typing import Dict, Optional, Union, cast
 import einops
 import torch
 from huggingface_hub import HfApi
-from transformers import AutoConfig, AutoModelForCausalLM, BertForPreTraining
+from transformers import (
+    AutoConfig,
+    AutoModelForCausalLM,
+    BertForPreTraining,
+    BertForSequenceClassification,
+)
 
 import transformer_lens.utils as utils
 from transformer_lens.HookedTransformerConfig import HookedTransformerConfig
@@ -178,7 +183,7 @@ OFFICIAL_MODEL_NAMES = [
     "01-ai/Yi-34B",
     "01-ai/Yi-6B-Chat",
     "01-ai/Yi-34B-Chat",
-    "andres-vs/tiny-stories-1M-finetuned-Att-Noneg-depth0",
+    "andres-vs/bert-base-uncased-finetuned_Att-Noneg-depth0",
 ]
 """Official model names for models on HuggingFace."""
 
@@ -1096,6 +1101,19 @@ def convert_hf_model_config(model_name: str, **kwargs):
             "gated_mlp": True,
             "final_rms": True,
         }
+    elif architecture == "BertForSequenceClassification":
+        cfg_dict = {
+            "d_model": hf_config.hidden_size,
+            "d_head": hf_config.hidden_size // hf_config.num_attention_heads,
+            "n_heads": hf_config.num_attention_heads,
+            "d_mlp": hf_config.intermediate_size,
+            "n_layers": hf_config.num_hidden_layers,
+            "n_ctx": hf_config.max_position_embeddings,
+            "eps": hf_config.layer_norm_eps,
+            "d_vocab": hf_config.vocab_size,
+            "act_fn": "gelu",
+            "attention_dir": "bidirectional",
+        }
     else:
         raise NotImplementedError(f"{architecture} is not currently supported.")
     # All of these models use LayerNorm
@@ -1399,9 +1417,15 @@ def get_pretrained_state_dict(
             if official_model_name in NON_HF_HOSTED_MODEL_NAMES:
                 raise NotImplementedError("Model not hosted on HuggingFace, must pass in hf_model")
             elif "bert" in official_model_name:
-                hf_model = BertForPreTraining.from_pretrained(
+                if "finetuned" in official_model_name:
+                    hf_model = BertForSequenceClassification.from_pretrained(
+                        official_model_name, torch_dtype=dtype, **kwargs
+                    )
+                else:
+                    hf_model = BertForPreTraining.from_pretrained(
                     official_model_name, torch_dtype=dtype, **kwargs
-                )
+                    )
+                
             else:
                 hf_model = AutoModelForCausalLM.from_pretrained(
                     official_model_name, torch_dtype=dtype, **kwargs
@@ -1442,6 +1466,8 @@ def get_pretrained_state_dict(
             state_dict = convert_phi_weights(hf_model, cfg)
         elif cfg.original_architecture == "GemmaForCausalLM":
             state_dict = convert_gemma_weights(hf_model, cfg)
+        elif cfg.original_architecture == "BertForSequenceClassification":
+            state_dict = convert_bert_sequence_classification_weights(hf_model, cfg)
         else:
             raise ValueError(
                 f"Loading weights from the architecture is not currently supported: {cfg.original_architecture}, generated from model name {cfg.model_name}. Feel free to open an issue on GitHub to request this feature."
@@ -2338,6 +2364,62 @@ def convert_bert_weights(bert, cfg: HookedTransformerConfig):
     state_dict["unembed.b_U"] = mlm_head.bias
 
     return state_dict
+
+def convert_bert_sequence_classification_weights(bert, cfg: HookedTransformerConfig):
+    embeddings = bert.bert.embeddings
+    state_dict = {
+        "embed.embed.W_E": embeddings.word_embeddings.weight,
+        "embed.pos_embed.W_pos": embeddings.position_embeddings.weight,
+        "embed.token_type_embed.W_token_type": embeddings.token_type_embeddings.weight,
+        "embed.ln.w": embeddings.LayerNorm.weight,
+        "embed.ln.b": embeddings.LayerNorm.bias,
+    }
+
+    for l in range(cfg.n_layers):
+        block = bert.bert.encoder.layer[l]
+        state_dict[f"blocks.{l}.attn.W_Q"] = einops.rearrange(
+            block.attention.self.query.weight, "(i h) m -> i m h", i=cfg.n_heads
+        )
+        state_dict[f"blocks.{l}.attn.b_Q"] = einops.rearrange(
+            block.attention.self.query.bias, "(i h) -> i h", i=cfg.n_heads
+        )
+        state_dict[f"blocks.{l}.attn.W_K"] = einops.rearrange(
+            block.attention.self.key.weight, "(i h) m -> i m h", i=cfg.n_heads
+        )
+        state_dict[f"blocks.{l}.attn.b_K"] = einops.rearrange(
+            block.attention.self.key.bias, "(i h) -> i h", i=cfg.n_heads
+        )
+        state_dict[f"blocks.{l}.attn.W_V"] = einops.rearrange(
+            block.attention.self.value.weight, "(i h) m -> i m h", i=cfg.n_heads
+        )
+        state_dict[f"blocks.{l}.attn.b_V"] = einops.rearrange(
+            block.attention.self.value.bias, "(i h) -> i h", i=cfg.n_heads
+        )
+        state_dict[f"blocks.{l}.attn.W_O"] = einops.rearrange(
+            block.attention.output.dense.weight,
+            "m (i h) -> i h m",
+            i=cfg.n_heads,
+        )
+        state_dict[f"blocks.{l}.attn.b_O"] = block.attention.output.dense.bias
+        state_dict[f"blocks.{l}.ln1.w"] = block.attention.output.LayerNorm.weight
+        state_dict[f"blocks.{l}.ln1.b"] = block.attention.output.LayerNorm.bias
+        state_dict[f"blocks.{l}.mlp.W_in"] = einops.rearrange(
+            block.intermediate.dense.weight, "mlp model -> model mlp"
+        )
+        state_dict[f"blocks.{l}.mlp.b_in"] = block.intermediate.dense.bias
+        state_dict[f"blocks.{l}.mlp.W_out"] = einops.rearrange(
+            block.output.dense.weight, "model mlp -> mlp model"
+        )
+        state_dict[f"blocks.{l}.mlp.b_out"] = block.output.dense.bias
+        state_dict[f"blocks.{l}.ln2.w"] = block.output.LayerNorm.weight
+        state_dict[f"blocks.{l}.ln2.b"] = block.output.LayerNorm.bias
+
+    cls_head = bert.cls.classifier
+    state_dict["cls_head.W"] = cls_head.weight
+    state_dict["cls_head.b"] = cls_head.bias
+
+    return state_dict
+
 
 
 def convert_bloom_weights(bloom, cfg: HookedTransformerConfig):
