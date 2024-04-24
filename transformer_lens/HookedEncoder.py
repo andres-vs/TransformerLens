@@ -364,8 +364,27 @@ class HookedEncoder(HookedRootModule):
         """Returns a list of strings with the format "L{l}H{h}", where l is the layer index and h is the head index."""
         return [f"L{l}H{h}" for l in range(self.cfg.n_layers) for h in range(self.cfg.n_heads)]
     
+    def set_use_attn_result(self, use_attn_result: bool):
+        """Toggle whether to explicitly calculate and expose the result for each attention head.
+
+        Useful for interpretability but can easily burn through GPU memory.
+        """
+        self.cfg.use_attn_result = use_attn_result
+
+    def set_use_split_qkv_input(self, use_split_qkv_input: bool):
+        """
+        Toggles whether to allow editing of inputs to each attention head.
+        """
+        self.cfg.use_split_qkv_input = use_split_qkv_input
+
     def set_use_hook_mlp_in(self, use_hook_mlp_in: bool):
         """Toggles whether to allow storing and editing inputs to each MLP layer."""
 
         assert not self.cfg.attn_only, "Can't use hook_mlp_in with attn_only model"
         self.cfg.use_hook_mlp_in = use_hook_mlp_in
+
+    def set_use_attn_in(self, use_attn_in: bool):
+        """
+        Toggles whether to allow editing of inputs to each attention head.
+        """
+        self.cfg.use_attn_in = use_attn_in
