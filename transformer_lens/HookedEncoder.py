@@ -138,6 +138,8 @@ class HookedEncoder(HookedRootModule):
             return None
 
         logits = self.unembed(resid)
+        del input, tokens, resid, mask, additive_attention_mask, one_zero_attention_mask
+        torch.cuda.empty_cache()
         return logits
 
     @overload
