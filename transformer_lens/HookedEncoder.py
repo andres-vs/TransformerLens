@@ -18,7 +18,13 @@ from typing_extensions import Literal
 
 import transformer_lens.loading_from_pretrained as loading
 from transformer_lens.ActivationCache import ActivationCache
-from transformer_lens.components import BertBlock, BertEmbed, BertMLMHead, Unembed
+from transformer_lens.components import (
+    BertBlock,
+    BertEmbed,
+    BertMLMHead,
+    ClassificationHead,
+    Unembed,
+)
 from transformer_lens.FactoredMatrix import FactoredMatrix
 from transformer_lens.hook_points import HookedRootModule, HookPoint
 from transformer_lens.HookedTransformerConfig import HookedTransformerConfig
@@ -38,7 +44,7 @@ class HookedEncoder(HookedRootModule):
         - The model only accepts tokens as inputs, and not strings, or lists of strings
     """
 
-    def __init__(self, cfg, tokenizer=None, move_to_device=True, **kwargs):
+    def __init__(self, cfg, tokenizer=None, move_to_device=True, head_type='standard', **kwargs):
         super().__init__()
         if isinstance(cfg, Dict):
             cfg = HookedTransformerConfig(**cfg)
@@ -47,6 +53,7 @@ class HookedEncoder(HookedRootModule):
                 "Please pass in a config dictionary or HookedTransformerConfig object. If you want to load a pretrained model, use HookedEncoder.from_pretrained() instead."
             )
         self.cfg = cfg
+        self.head_type = head_type
 
         assert self.cfg.n_devices == 1, "Multiple devices not supported for HookedEncoder"
         if tokenizer is not None:
@@ -65,8 +72,13 @@ class HookedEncoder(HookedRootModule):
 
         self.embed = BertEmbed(self.cfg)
         self.blocks = nn.ModuleList([BertBlock(self.cfg) for _ in range(self.cfg.n_layers)])
-        self.mlm_head = BertMLMHead(cfg)
-        self.unembed = Unembed(self.cfg)
+        if self.head_type == "standard":
+            self.head = BertMLMHead(self.cfg)
+            self.unembed = Unembed(self.cfg)
+        elif self.head_type == "classification":
+            self.head = ClassificationHead(self.cfg)
+        else:
+            raise ValueError("Invalid head type. Must be 'standard' or 'classification'")
 
         self.hook_full_embed = HookPoint()
 
@@ -132,13 +144,18 @@ class HookedEncoder(HookedRootModule):
 
         for block in self.blocks:
             resid = block(resid, additive_attention_mask)
-        resid = self.mlm_head(resid)
+        resid = self.head(resid)
 
         if return_type is None:
             return None
 
-        logits = self.unembed(resid)
+        
+        if self.head_type == "standard":
+            logits = self.unembed(resid)
+        elif self.head_type == "classification":
+            logits = resid
         del input, tokens, resid, mask, additive_attention_mask, one_zero_attention_mask
+        gc.collect()
         torch.cuda.empty_cache()
         return logits
 
@@ -206,6 +223,7 @@ class HookedEncoder(HookedRootModule):
         tokenizer=None,
         move_to_device=True,
         dtype=torch.float32,
+        head='standard',
         **from_pretrained_kwargs,
     ) -> HookedEncoder:
         """Loads in the pretrained weights from huggingface. Currently supports loading weight from HuggingFace BertForMaskedLM. Unlike HookedTransformer, this does not yet do any preprocessing on the model."""
@@ -245,7 +263,7 @@ class HookedEncoder(HookedRootModule):
             official_model_name, cfg, hf_model, dtype=dtype, **from_pretrained_kwargs
         )
 
-        model = cls(cfg, tokenizer, move_to_device=False)
+        model = cls(cfg, tokenizer, move_to_device=False, head=head)
 
         model.load_state_dict(state_dict, strict=False)
 
