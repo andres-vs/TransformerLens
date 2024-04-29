@@ -6,6 +6,7 @@ because it has a significantly different architecture to e.g. GPT style transfor
 
 from __future__ import annotations
 
+import gc
 import logging
 from typing import Dict, List, Optional, Tuple, Union, cast, overload
 
