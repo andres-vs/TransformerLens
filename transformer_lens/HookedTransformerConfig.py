@@ -211,6 +211,7 @@ class HookedTransformerConfig:
     rotary_adjacent_pairs: bool = False
     num_experts: Optional[int] = None
     experts_per_token: Optional[int] = None
+    n_classes: Optional[int] = None
 
     def __post_init__(self):
         if self.n_heads == -1:

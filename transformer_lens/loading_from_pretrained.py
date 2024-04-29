@@ -1111,6 +1111,7 @@ def convert_hf_model_config(model_name: str, **kwargs):
             "n_ctx": hf_config.max_position_embeddings,
             "eps": hf_config.layer_norm_eps,
             "d_vocab": hf_config.vocab_size,
+            "n_classes": hf_config.num_labels,
             "act_fn": "gelu",
             "attention_dir": "bidirectional",
         }
