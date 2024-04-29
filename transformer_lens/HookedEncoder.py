@@ -223,7 +223,7 @@ class HookedEncoder(HookedRootModule):
         tokenizer=None,
         move_to_device=True,
         dtype=torch.float32,
-        head='standard',
+        head_type: Optional[str] = 'standard',
         **from_pretrained_kwargs,
     ) -> HookedEncoder:
         """Loads in the pretrained weights from huggingface. Currently supports loading weight from HuggingFace BertForMaskedLM. Unlike HookedTransformer, this does not yet do any preprocessing on the model."""
@@ -263,7 +263,7 @@ class HookedEncoder(HookedRootModule):
             official_model_name, cfg, hf_model, dtype=dtype, **from_pretrained_kwargs
         )
 
-        model = cls(cfg, tokenizer, move_to_device=False, head=head)
+        model = cls(cfg, tokenizer, move_to_device=False, head_type=head_type)
 
         model.load_state_dict(state_dict, strict=False)
 
