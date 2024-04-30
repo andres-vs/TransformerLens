@@ -265,9 +265,9 @@ class HookedEncoder(HookedRootModule):
         )
 
         model = cls(cfg, tokenizer, move_to_device=False, head_type=head_type)
-
+        print(model)
         model.load_state_dict(state_dict, strict=False)
-
+        print(model)
         if move_to_device:
             model.to(cfg.device)
 
