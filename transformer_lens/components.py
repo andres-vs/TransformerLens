@@ -235,7 +235,7 @@ class ClassificationHead(nn.Module):
         if isinstance(cfg, Dict):
             cfg = HookedTransformerConfig.from_dict(cfg)
         self.cfg = cfg
-        self.W = nn.Parameter(torch.empty(cfg.n_classes, cfg.d_model, dtype=cfg.dtype).T)
+        self.W = nn.Parameter(torch.empty(cfg.n_classes, cfg.d_model, dtype=cfg.dtype))
         self.b = nn.Parameter(torch.zeros(cfg.n_classes, dtype=cfg.dtype))
 
     def forward(self, resid: Float[torch.Tensor, "batch pos d_model"]) -> torch.Tensor:
