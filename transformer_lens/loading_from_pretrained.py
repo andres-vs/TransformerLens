@@ -2420,6 +2420,8 @@ def convert_bert_sequence_classification_weights(bert, cfg: HookedTransformerCon
     cls_head = bert.classifier
     state_dict["head.W"] = cls_head.weight
     state_dict["head.b"] = cls_head.bias
+    print(state_dict["head.W"].shape)
+    print(state_dict["head.b"].shape)
 
     return state_dict
 

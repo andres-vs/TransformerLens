@@ -268,6 +268,8 @@ class HookedEncoder(HookedRootModule):
         print("model.embed.embed.W_E" , model.embed.embed.W_E)
         print("model.blocks[10].mlp.W_in" , model.blocks[10].mlp.W_in)
         print("model.head.W" , model.head.W)
+        print("model.head.W.size()" , model.head.W.size())
+        print("model.head.b.size()" , model.head.b.size())
         model.load_state_dict(state_dict, strict=False)
         print("model.embed.embed.W_E" , model.embed.embed.W_E)
         print("model.blocks[10].mlp.W_in" , model.blocks[10].mlp.W_in)
