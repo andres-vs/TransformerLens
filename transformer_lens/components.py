@@ -235,11 +235,11 @@ class ClassificationHead(nn.Module):
         if isinstance(cfg, Dict):
             cfg = HookedTransformerConfig.from_dict(cfg)
         self.cfg = cfg
-        self.W = nn.Parameter(torch.empty(cfg.d_model, cfg.n_classes, dtype=cfg.dtype))
+        self.W = nn.Parameter(torch.empty(cfg.n_classes, cfg.d_model, dtype=cfg.dtype).T)
         self.b = nn.Parameter(torch.zeros(cfg.n_classes, dtype=cfg.dtype))
 
     def forward(self, resid: Float[torch.Tensor, "batch pos d_model"]) -> torch.Tensor:
-        return einsum("batch pos d_model, d_model n_classes -> batch pos n_classes", resid, self.W) + self.b	
+        return einsum("batch pos d_model, n_classes d_model -> batch pos n_classes", resid, self.W) + self.b
 
 
 # LayerNormPre
