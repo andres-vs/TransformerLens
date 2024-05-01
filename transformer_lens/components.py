@@ -244,8 +244,8 @@ class BertPooler(nn.Module):
         print("state of first token shape", hidden_states[:, 0, :].shape)
         print("self.W.shape", self.W.shape)
         print("self.b.shape", self.b.shape)
-        print("results shape", self.act_fn(einsum("batch pos d_model, d_model d_model -> batch d_model", hidden_states[:, 0, :], self.W) + self.b).shape)
-        return self.act_fn(einsum("batch pos d_model, d_model d_model -> batch d_model", hidden_states[:, 0, :], self.W) + self.b)
+        print("results shape", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", hidden_states[:, 0, :], self.W) + self.b).shape)
+        return self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", hidden_states[:, 0, :], self.W) + self.b)
     
 
 class ClassificationHead(nn.Module):
