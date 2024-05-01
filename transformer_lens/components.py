@@ -244,8 +244,8 @@ class BertPooler(nn.Module):
         print("state of first token shape", hidden_states[:, 0, :].shape)
         print("self.W.shape", self.W.shape)
         print("self.b.shape", self.b.shape)
-        print("results shape", self.act_fn(einsum("batch pos d_model, d_model d_model -> batch d_model", hidden_states, self.W) + self.b).shape)
-        return self.act_fn(einsum("batch pos d_model, d_model d_model -> batch d_model", hidden_states, self.W) + self.b)
+        print("results shape", self.act_fn(einsum("batch pos d_model, d_model d_model -> batch d_model", hidden_states[:, 0, :], self.W) + self.b).shape)
+        return self.act_fn(einsum("batch pos d_model, d_model d_model -> batch d_model", hidden_states[:, 0, :], self.W) + self.b)
     
 
 class ClassificationHead(nn.Module):
@@ -265,8 +265,8 @@ class ClassificationHead(nn.Module):
         print("resid.shape", resid.shape)
         print("self.W.shape", self.W.shape)
         print("self.b.shape", self.b.shape)
-        print("results shape", (einsum("batch pos d_model, d_model n_classes -> batch pos n_classes", resid, self.W.t()) + self.b).shape)
-        return einsum("batch pos d_model, d_model n_classes -> batch pos n_classes", resid, self.W.t()) + self.b
+        print("results shape", (einsum("batch d_model, d_model n_classes -> batch n_classes", resid, self.W.t()) + self.b).shape)
+        return einsum("batch d_model, d_model n_classes -> batch n_classes", resid, self.W.t()) + self.b
 
 
 # LayerNormPre
