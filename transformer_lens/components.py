@@ -243,7 +243,7 @@ class ClassificationHead(nn.Module):
         print("self.W.shape", self.W.shape)
         print("self.b.shape", self.b.shape)
         print("results shape", einsum("batch pos d_model, n_classes d_model -> batch pos n_classes", resid, self.W).shape)
-        return einsum("batch pos d_model, n_classes d_model -> batch pos n_classes", resid, self.W.t()) + self.b
+        return einsum("batch pos d_model, d_model n_classes -> batch pos n_classes", resid, self.W.t()) + self.b
 
 
 # LayerNormPre
