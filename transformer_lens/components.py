@@ -225,6 +225,24 @@ class BertMLMHead(nn.Module):
         return resid
     
 
+class BertPooler(nn.Module):
+    """
+    The BERT pooler is a linear layer that takes the output of the last layer of the transformer and returns a single vector that represents the entire input sequence. This vector is used for classification tasks.
+    """
+
+    def __init__(self, cfg: Union[Dict, HookedTransformerConfig]):
+        super().__init__()
+        if isinstance(cfg, Dict):
+            cfg = HookedTransformerConfig.from_dict(cfg)
+        self.cfg = cfg
+        self.W = nn.Parameter(torch.empty(cfg.d_model, cfg.d_model, dtype=cfg.dtype))
+        self.b = nn.Parameter(torch.zeros(cfg.d_model, dtype=cfg.dtype))
+        self.act_fn = nn.Tanh()
+
+    def forward(self, hidden_state: Float[torch.Tensor, "batch pos d_model"]) -> torch.Tensor:
+        return self.act_fn(einsum("batch pos d_model, d_model d_model -> batch pos", hidden_state, self.W) + self.b)
+    
+
 class ClassificationHead(nn.Module):
     """
     Transforms BERT embeddings into logits. The purpose of this module is to predict the class of a sentence.
@@ -242,7 +260,7 @@ class ClassificationHead(nn.Module):
         print("resid.shape", resid.shape)
         print("self.W.shape", self.W.shape)
         print("self.b.shape", self.b.shape)
-        print("results shape", einsum("batch pos d_model, n_classes d_model -> batch pos n_classes", resid, self.W).shape)
+        print("results shape", (einsum("batch pos d_model, d_model n_classes -> batch pos n_classes", resid, self.W.t()) + self.b).shape)
         return einsum("batch pos d_model, d_model n_classes -> batch pos n_classes", resid, self.W.t()) + self.b
 
 
@@ -1568,4 +1586,5 @@ class BertBlock(nn.Module):
         resid_post = self.hook_resid_post(normalized_resid_mid + mlp_out)
         normalized_resid_post = self.hook_normalized_resid_post(self.ln2(resid_post))
 
-        return normalized_resid_post
+        # Return both the hidden state (resid_post) and the output (normalized_resid_post)
+        return resid_post, normalized_resid_post

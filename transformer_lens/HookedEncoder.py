@@ -24,6 +24,7 @@ from transformer_lens.components import (
     BertEmbed,
     BertMLMHead,
     ClassificationHead,
+    Pooler,
     Unembed,
 )
 from transformer_lens.FactoredMatrix import FactoredMatrix
@@ -77,6 +78,7 @@ class HookedEncoder(HookedRootModule):
             self.head = BertMLMHead(self.cfg)
             self.unembed = Unembed(self.cfg)
         elif self.head_type == "classification":
+            self.pooler = Pooler(self.cfg)
             self.head = ClassificationHead(self.cfg)
         else:
             raise ValueError("Invalid head type. Must be 'standard' or 'classification'")
@@ -144,17 +146,20 @@ class HookedEncoder(HookedRootModule):
         )
 
         for block in self.blocks:
-            resid = block(resid, additive_attention_mask)
-        resid = self.head(resid)
+            hidden_state, resid = block(resid, additive_attention_mask)
+
+        if self.head_type == "standard":
+            resid = self.head(resid)
+            logits = self.unembed(resid)
+        elif self.head_type == "classification":
+            pooled_output = self.pooler(resid)
+            logits = self.head(pooled_output)
 
         if return_type is None:
             return None
 
         
-        if self.head_type == "standard":
-            logits = self.unembed(resid)
-        elif self.head_type == "classification":
-            logits = resid
+        
         del input, tokens, resid, mask, additive_attention_mask, one_zero_attention_mask
         gc.collect()
         torch.cuda.empty_cache()
