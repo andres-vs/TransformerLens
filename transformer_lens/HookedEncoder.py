@@ -78,7 +78,7 @@ class HookedEncoder(HookedRootModule):
             self.head = BertMLMHead(self.cfg)
             self.unembed = Unembed(self.cfg)
         elif self.head_type == "classification":
-            self.pooler = Pooler(self.cfg)
+            self.pooler = BertPooler(self.cfg)
             self.head = ClassificationHead(self.cfg)
         else:
             raise ValueError("Invalid head type. Must be 'standard' or 'classification'")
