@@ -1470,7 +1470,7 @@ def get_pretrained_state_dict(
             state_dict = convert_gemma_weights(hf_model, cfg)
         elif cfg.original_architecture == "BertForSequenceClassification":
             state_dict = convert_bert_sequence_classification_weights(hf_model, cfg)
-            print(state_dict)
+            # print(state_dict)
         else:
             raise ValueError(
                 f"Loading weights from the architecture is not currently supported: {cfg.original_architecture}, generated from model name {cfg.model_name}. Feel free to open an issue on GitHub to request this feature."

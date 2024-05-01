@@ -265,9 +265,17 @@ class HookedEncoder(HookedRootModule):
         )
 
         model = cls(cfg, tokenizer, move_to_device=False, head_type=head_type)
-        print(model)
+        print("model.embed.embed.W_E" , model.embed.embed.W_E)
+        print("model.blocks[10].mlp.W_in" , model.blocks[10].mlp.W_in)
+        print("model.head.W" , model.head.W)
         model.load_state_dict(state_dict, strict=False)
-        print(model)
+        print("model.embed.embed.W_E" , model.embed.embed.W_E)
+        print("model.blocks[10].mlp.W_in" , model.blocks[10].mlp.W_in)
+        print("model.head.W" , model.head.W)
+        model.load_state_dict(state_dict, strict=True)
+        print("model.embed.embed.W_E" , model.embed.embed.W_E)
+        print("model.blocks[10].mlp.W_in" , model.blocks[10].mlp.W_in)
+        print("model.head.W" , model.head.W)
         if move_to_device:
             model.to(cfg.device)
 
