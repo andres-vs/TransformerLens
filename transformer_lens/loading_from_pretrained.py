@@ -1422,7 +1422,7 @@ def get_pretrained_state_dict(
                     hf_model = BertForSequenceClassification.from_pretrained(
                         official_model_name, torch_dtype=dtype, **kwargs
                     )
-                    print(hf_model)
+                    # print(hf_model)
                 else:
                     hf_model = BertForPreTraining.from_pretrained(
                     official_model_name, torch_dtype=dtype, **kwargs
@@ -2418,8 +2418,8 @@ def convert_bert_sequence_classification_weights(bert, cfg: HookedTransformerCon
         state_dict[f"blocks.{l}.ln2.b"] = block.output.LayerNorm.bias
 
     cls_head = bert.classifier
-    state_dict["cls_head.W"] = cls_head.weight
-    state_dict["cls_head.b"] = cls_head.bias
+    state_dict["head.W"] = cls_head.weight
+    state_dict["head.b"] = cls_head.bias
 
     return state_dict
 
