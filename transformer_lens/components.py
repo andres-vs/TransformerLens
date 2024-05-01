@@ -240,6 +240,10 @@ class BertPooler(nn.Module):
         self.act_fn = nn.Tanh()
 
     def forward(self, hidden_state: Float[torch.Tensor, "batch pos d_model"]) -> torch.Tensor:
+        print("resid.shape", hidden_state.shape)
+        print("self.W.shape", self.W.shape)
+        print("self.b.shape", self.b.shape)
+        print("results shape", self.act_fn(einsum("batch pos d_model, d_model d_model -> batch pos", hidden_state, self.W) + self.b).shape)
         return self.act_fn(einsum("batch pos d_model, d_model d_model -> batch pos", hidden_state, self.W) + self.b)
     
 
