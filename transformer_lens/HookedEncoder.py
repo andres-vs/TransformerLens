@@ -23,8 +23,8 @@ from transformer_lens.components import (
     BertBlock,
     BertEmbed,
     BertMLMHead,
+    BertPooler,
     ClassificationHead,
-    Pooler,
     Unembed,
 )
 from transformer_lens.FactoredMatrix import FactoredMatrix
