@@ -239,7 +239,11 @@ class ClassificationHead(nn.Module):
         self.b = nn.Parameter(torch.zeros(cfg.n_classes, dtype=cfg.dtype))
 
     def forward(self, resid: Float[torch.Tensor, "batch pos d_model"]) -> torch.Tensor:
-        return einsum("batch pos d_model, n_classes d_model -> batch pos n_classes", resid, self.W) + self.b
+        print("resid.shape", resid.shape)
+        print("self.W.shape", self.W.shape)
+        print("self.b.shape", self.b.shape)
+        print("results shape", einsum("batch pos d_model, n_classes d_model -> batch pos n_classes", resid, self.W).shape)
+        return einsum("batch pos d_model, n_classes d_model -> batch pos n_classes", resid, self.W.t()) + self.b
 
 
 # LayerNormPre
