@@ -240,11 +240,11 @@ class BertPooler(nn.Module):
         self.act_fn = nn.Tanh()
 
     def forward(self, hidden_states: Float[torch.Tensor, "batch pos d_model"]) -> torch.Tensor:
-        print("resid.shape", hidden_states.shape)
-        print("state of first token shape", hidden_states[:, 0, :].shape)
-        print("self.W.shape", self.W.shape)
-        print("self.b.shape", self.b.shape)
-        print("results shape", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", hidden_states[:, 0, :], self.W) + self.b).shape)
+        # print("resid.shape", hidden_states.shape)
+        # print("state of first token shape", hidden_states[:, 0, :].shape)
+        # print("self.W.shape", self.W.shape)
+        # print("self.b.shape", self.b.shape)
+        # print("results shape", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", hidden_states[:, 0, :], self.W) + self.b).shape)
         return self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", hidden_states[:, 0, :], self.W) + self.b)
     
 
@@ -262,10 +262,10 @@ class ClassificationHead(nn.Module):
         self.b = nn.Parameter(torch.zeros(cfg.n_classes, dtype=cfg.dtype))
 
     def forward(self, resid: Float[torch.Tensor, "batch pos d_model"]) -> torch.Tensor:
-        print("resid.shape", resid.shape)
-        print("self.W.shape", self.W.shape)
-        print("self.b.shape", self.b.shape)
-        print("results shape", (einsum("batch d_model, d_model n_classes -> batch n_classes", resid, self.W.t()) + self.b).shape)
+        # print("resid.shape", resid.shape)
+        # print("self.W.shape", self.W.shape)
+        # print("self.b.shape", self.b.shape)
+        # print("results shape", (einsum("batch d_model, d_model n_classes -> batch n_classes", resid, self.W.t()) + self.b).shape)
         return einsum("batch d_model, d_model n_classes -> batch n_classes", resid, self.W.t()) + self.b
 
 
