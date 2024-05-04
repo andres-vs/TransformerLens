@@ -134,7 +134,7 @@ class HookedEncoder(HookedRootModule):
                 one_zero_attention_mask = one_zero_attention_mask.to(self.cfg.device)
 
         resid = self.hook_full_embed(self.embed(tokens, token_type_ids))
-
+        print("Embedding outupt:", resid)
         large_negative_number = -torch.inf
         mask = (
             repeat(1 - one_zero_attention_mask, "batch pos -> batch 1 1 pos")
@@ -144,11 +144,11 @@ class HookedEncoder(HookedRootModule):
         additive_attention_mask = (
             torch.where(mask == 1, large_negative_number, 0) if mask is not None else None
         )
-
-        for block in self.blocks:
-            hidden_states, resid = block(resid, additive_attention_mask)
-        # print("hidden_states", hidden_states)
-        # print("resid", resid)
+        
+        for i, block in enumerate(self.blocks):
+            hidden_state, resid = block(resid, additive_attention_mask)
+            print(f"Layer {i} hidden_state", hidden_state)
+            print(f"Layer {i} resid", resid)
         if self.head_type == "standard":
             resid = self.head(resid)
             logits = self.unembed(resid)
@@ -273,19 +273,19 @@ class HookedEncoder(HookedRootModule):
         model = cls(cfg, tokenizer, move_to_device=False, head_type=head_type)
         print("model.embed.embed.W_E" , model.embed.embed.W_E)
         print("model.blocks[10].mlp.W_in" , model.blocks[10].mlp.W_in)
-        print("model.head.W" , model.head.W)
-        print("model.head.b", model.head.b)
+        # print("model.head.W" , model.head.W)
+        # print("model.head.b", model.head.b)
         # print("model.head.W.size()" , model.head.W.size())
         # print("model.head.b.size()" , model.head.b.size())
-        print("model.pooler.W", model.pooler.W)
-        print("model.pooler.b", model.pooler.b)
+        # print("model.pooler.W", model.pooler.W)
+        # print("model.pooler.b", model.pooler.b)
         model.load_state_dict(state_dict, strict=False)
         print("model.embed.embed.W_E" , model.embed.embed.W_E)
         print("model.blocks[10].mlp.W_in" , model.blocks[10].mlp.W_in)
-        print("model.head.W" , model.head.W)
-        print("model.head.b", model.head.b)
-        print("model.pooler.W", model.pooler.W)
-        print("model.pooler.b", model.pooler.b)
+        # print("model.head.W" , model.head.W)
+        # print("model.head.b", model.head.b)
+        # print("model.pooler.W", model.pooler.W)
+        # print("model.pooler.b", model.pooler.b)
         # model.load_state_dict(state_dict, strict=True)
         # print("model.embed.embed.W_E" , model.embed.embed.W_E)
         # print("model.blocks[10].mlp.W_in" , model.blocks[10].mlp.W_in)
