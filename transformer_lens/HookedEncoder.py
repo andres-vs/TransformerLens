@@ -147,13 +147,14 @@ class HookedEncoder(HookedRootModule):
         
         for i, block in enumerate(self.blocks):
             hidden_state, resid = block(resid, additive_attention_mask)
-            print(f"Layer {i} hidden_state", hidden_state)
+            # print(f"Layer {i} hidden_state", hidden_state)
             print(f"Layer {i} resid", resid)
         if self.head_type == "standard":
             resid = self.head(resid)
             logits = self.unembed(resid)
         elif self.head_type == "classification":
             pooled_output = self.pooler(resid)
+            print("pooled_output", pooled_output)
             logits = self.head(pooled_output)
 
         if return_type is None:
