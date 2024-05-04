@@ -244,10 +244,12 @@ class BertPooler(nn.Module):
         # print("state of first token shape", hidden_states[:, 0, :].shape)
         # print("self.W.shape", self.W.shape)
         # print("self.b.shape", self.b.shape)
-        print("results no trans", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0, :], self.W) + self.b))
-        print("results W trans", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0, :], self.W.t()) + self.b))
-        print("results b trans", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0, :], self.W) + self.b.t()))
-        print("results both trans", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0, :], self.W.t()) + self.b.t()))
+        print("hidden state original", resid[:, 0, :])
+        print("hidden state like HF", resid[:, 0])
+        print("results no trans", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W) + self.b))
+        print("results W trans", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W.t()) + self.b))
+        print("results b trans", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W) + self.b.t()))
+        print("results both trans", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W.t()) + self.b.t()))
         return self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0, :], self.W.t()) + self.b)
     
 
