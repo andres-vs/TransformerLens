@@ -134,7 +134,7 @@ class HookedEncoder(HookedRootModule):
                 one_zero_attention_mask = one_zero_attention_mask.to(self.cfg.device)
 
         resid = self.hook_full_embed(self.embed(tokens, token_type_ids))
-        print("Embedding outupt:", resid)
+        # print("Embedding outupt:", resid)
         large_negative_number = -torch.inf
         mask = (
             repeat(1 - one_zero_attention_mask, "batch pos -> batch 1 1 pos")
@@ -146,15 +146,15 @@ class HookedEncoder(HookedRootModule):
         )
         
         for i, block in enumerate(self.blocks):
-            hidden_state, resid = block(resid, additive_attention_mask)
+            resid = block(resid, additive_attention_mask)
             # print(f"Layer {i} hidden_state", hidden_state)
-            print(f"Layer {i} resid", resid)
+            # print(f"Layer {i} resid", resid)
         if self.head_type == "standard":
             resid = self.head(resid)
             logits = self.unembed(resid)
         elif self.head_type == "classification":
             pooled_output = self.pooler(resid)
-            print("pooled_output", pooled_output)
+            # print("pooled_output", pooled_output)
             logits = self.head(pooled_output)
 
         if return_type is None:
@@ -272,25 +272,11 @@ class HookedEncoder(HookedRootModule):
         )
 
         model = cls(cfg, tokenizer, move_to_device=False, head_type=head_type)
-        print("model.embed.embed.W_E" , model.embed.embed.W_E)
-        print("model.blocks[10].mlp.W_in" , model.blocks[10].mlp.W_in)
-        # print("model.head.W" , model.head.W)
-        # print("model.head.b", model.head.b)
-        # print("model.head.W.size()" , model.head.W.size())
-        # print("model.head.b.size()" , model.head.b.size())
-        # print("model.pooler.W", model.pooler.W)
-        # print("model.pooler.b", model.pooler.b)
-        model.load_state_dict(state_dict, strict=False)
-        print("model.embed.embed.W_E" , model.embed.embed.W_E)
-        print("model.blocks[10].mlp.W_in" , model.blocks[10].mlp.W_in)
-        # print("model.head.W" , model.head.W)
-        # print("model.head.b", model.head.b)
-        # print("model.pooler.W", model.pooler.W)
-        # print("model.pooler.b", model.pooler.b)
-        # model.load_state_dict(state_dict, strict=True)
         # print("model.embed.embed.W_E" , model.embed.embed.W_E)
         # print("model.blocks[10].mlp.W_in" , model.blocks[10].mlp.W_in)
-        # print("model.head.W" , model.head.W)
+        model.load_state_dict(state_dict, strict=False)
+        # print("model.embed.embed.W_E" , model.embed.embed.W_E)
+        # print("model.blocks[10].mlp.W_in" , model.blocks[10].mlp.W_in)
         if move_to_device:
             model.to(cfg.device)
 

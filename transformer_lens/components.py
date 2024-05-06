@@ -237,31 +237,9 @@ class BertPooler(nn.Module):
         self.cfg = cfg
         self.W = nn.Parameter(torch.empty(cfg.d_model, cfg.d_model, dtype=cfg.dtype))
         self.b = nn.Parameter(torch.zeros(cfg.d_model, dtype=cfg.dtype))
-        # self.dense = nn.Linear(cfg.d_model, cfg.d_model)
         self.act_fn = nn.Tanh()
 
     def forward(self, resid: Float[torch.Tensor, "batch pos d_model"]) -> torch.Tensor:
-        # print("resid.shape", hidden_states.shape)
-        # print("state of first token shape", hidden_states[:, 0, :].shape)
-        # print("self.W.shape", self.W.shape)
-        # print("self.b.shape", self.b.shape)
-        # print("hidden state like HF", resid[:, 0])
-        # print("W", self.W)
-        # print("W trans", self.W.t())
-        # print("results dense no trans shape", einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W).shape)
-        # print("bias shape", self.b.shape)
-        # print("results dense shape", (einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W) + self.b).shape)
-        # print("results after W multiplication", einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W))
-        print("results dense different dimensions", einsum("batch d_model_in, d_model_out d_model_in -> batch d_model_out", resid[:, 0], self.W) + self.b)
-        print("results dense different dimensions with parentheses", (einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W) + self.b))
-        # print("results dense no trans", einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W) + self.b)
-        # print("results dense W trans", einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W.t()) + self.b)
-        # print("results dense b trans", einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W) + self.b.t())
-        # print("results dense both trans", einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W.t()) + self.b.t())
-        # print("result activation no trans:", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W) + self.b))
-        # print("result activation W trans:", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W.t()) + self.b))
-        # print("result activation b trans:", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W) + self.b.t()))
-        # print("result activation both trans:", self.act_fn(einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W.t()) + self.b.t()))
         return self.act_fn(einsum("batch d_model_in, d_model_out d_model_in -> batch d_model_out", resid[:, 0], self.W) + self.b)
     
 
@@ -279,10 +257,6 @@ class ClassificationHead(nn.Module):
         self.b = nn.Parameter(torch.zeros(cfg.n_classes, dtype=cfg.dtype))
 
     def forward(self, resid: Float[torch.Tensor, "batch pos d_model"]) -> torch.Tensor:
-        # print("resid.shape", resid.shape)
-        # print("self.W.shape", self.W.shape)
-        # print("self.b.shape", self.b.shape)
-        # print("results shape", (einsum("batch d_model, d_model n_classes -> batch n_classes", resid, self.W.t()) + self.b).shape)
         return einsum("batch d_model, n_classes d_model -> batch n_classes", resid, self.W) + self.b
 
 
@@ -1609,4 +1583,4 @@ class BertBlock(nn.Module):
         normalized_resid_post = self.hook_normalized_resid_post(self.ln2(resid_post))
 
         # Return both the hidden state (resid_post) and the output (normalized_resid_post)
-        return resid_post, normalized_resid_post
+        return normalized_resid_post
