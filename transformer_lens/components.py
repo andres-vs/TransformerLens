@@ -237,6 +237,7 @@ class BertPooler(nn.Module):
         self.cfg = cfg
         self.W = nn.Parameter(torch.empty(cfg.d_model, cfg.d_model, dtype=cfg.dtype))
         self.b = nn.Parameter(torch.zeros(cfg.d_model, dtype=cfg.dtype))
+        # self.dense = nn.Linear(cfg.d_model, cfg.d_model)
         self.act_fn = nn.Tanh()
 
     def forward(self, resid: Float[torch.Tensor, "batch pos d_model"]) -> torch.Tensor:
@@ -247,6 +248,9 @@ class BertPooler(nn.Module):
         print("hidden state like HF", resid[:, 0])
         print("W", self.W)
         print("W trans", self.W.t())
+        print("results dense no trans shape", einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W).shape)
+        print("bias shape", self.b.shape)
+        print("results dense with parantheses", (einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W) + self.b))
         print("results dense no trans", einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W) + self.b)
         print("results dense W trans", einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W.t()) + self.b)
         print("results dense b trans", einsum("batch d_model, d_model d_model -> batch d_model", resid[:, 0], self.W) + self.b.t())
