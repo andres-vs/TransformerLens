@@ -184,6 +184,8 @@ OFFICIAL_MODEL_NAMES = [
     "01-ai/Yi-6B-Chat",
     "01-ai/Yi-34B-Chat",
     "andres-vs/bert-base-uncased-finetuned_Att-Noneg-depth0",
+    "andres-vs/bert-base-uncased-finetuned_Att-Noneg-depth1",
+    "andres-vs/bert-base-uncased-finetuned_Att-Noneg-depth0_retrained-1",
 ]
 """Official model names for models on HuggingFace."""
 
