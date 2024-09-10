@@ -2367,6 +2367,7 @@ def convert_bert_weights(bert, cfg: HookedTransformerConfig):
     state_dict["unembed.W_U"] = embeddings.word_embeddings.weight.T
     # "unembed.W_U": mlm_head.decoder.weight.T,
     state_dict["unembed.b_U"] = mlm_head.bias
+    #test
 
     return state_dict
 
