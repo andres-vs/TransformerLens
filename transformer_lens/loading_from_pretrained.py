@@ -186,6 +186,8 @@ OFFICIAL_MODEL_NAMES = [
     "andres-vs/bert-base-uncased-finetuned_Att-Noneg-depth0",
     "andres-vs/bert-base-uncased-finetuned_Att-Noneg-depth1",
     "andres-vs/bert-base-uncased-finetuned_Att-Noneg-depth0_retrained-1",
+    "andres-vs/bert-medium-finetuned_Att-Noneg-depth0",
+    "andres-vs/bert-medium-finetuned_Att-Noneg-depth1",
 ]
 """Official model names for models on HuggingFace."""
 
