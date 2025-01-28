@@ -1546,6 +1546,7 @@ class BertBlock(nn.Module):
         self.hook_mlp_out = HookPoint()  # [batch, pos, d_model]
         self.hook_resid_pre = HookPoint()  # [batch, pos, d_model]
         self.hook_resid_mid = HookPoint()  # [batch, pos, d_model]
+        self.hook_normalized_resid_mid = HookPoint()  # [batch, pos, d_model]
         self.hook_resid_post = HookPoint()  # [batch, pos, d_model]
         self.hook_normalized_resid_post = HookPoint()  # [batch, pos, d_model]
 
@@ -1577,7 +1578,7 @@ class BertBlock(nn.Module):
         resid_mid = self.hook_resid_mid(resid_pre + attn_out)
 
         mlp_in = resid_mid if not self.cfg.use_hook_mlp_in else self.hook_mlp_in(resid_mid.clone())
-        normalized_resid_mid = self.ln1(mlp_in)
+        normalized_resid_mid = self.hook_normalized_resid_mid(self.ln1(mlp_in))
         mlp_out = self.hook_mlp_out(self.mlp(normalized_resid_mid))
         resid_post = self.hook_resid_post(normalized_resid_mid + mlp_out)
         normalized_resid_post = self.hook_normalized_resid_post(self.ln2(resid_post))
