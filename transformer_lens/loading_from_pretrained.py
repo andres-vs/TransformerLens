@@ -1445,6 +1445,15 @@ def get_pretrained_state_dict(
         elif hf_model is None:
             if official_model_name in NON_HF_HOSTED_MODEL_NAMES:
                 raise NotImplementedError("Model not hosted on HuggingFace, must pass in hf_model")
+            elif "roberta" in official_model_name:
+                if "finetuned" in official_model_name:
+                    hf_model = RobertaForSequenceClassification.from_pretrained(
+                        official_model_name, torch_dtype=dtype, **kwargs
+                    )
+                else:
+                    hf_model = RobertaForMaskedLM.from_pretrained(
+                        official_model_name, torch_dtype=dtype, **kwargs
+                    )
             elif "bert" in official_model_name:
                 if "finetuned" in official_model_name:
                     hf_model = BertForSequenceClassification.from_pretrained(
@@ -1455,15 +1464,7 @@ def get_pretrained_state_dict(
                     hf_model = BertForPreTraining.from_pretrained(
                     official_model_name, torch_dtype=dtype, **kwargs
                     )
-            elif "roberta" in official_model_name:
-                if "finetuned" in official_model_name:
-                    hf_model = RobertaForSequenceClassification.from_pretrained(
-                        official_model_name, torch_dtype=dtype, **kwargs
-                    )
-                else:
-                    hf_model = RobertaForMaskedLM.from_pretrained(
-                        official_model_name, torch_dtype=dtype, **kwargs
-                    )
+            
                 
             else:
                 hf_model = AutoModelForCausalLM.from_pretrained(
